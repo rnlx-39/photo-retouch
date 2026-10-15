@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>やさしい写真補正</title>
+<style>
+:root{--bg:#eceeea;--panel:#fbfbf8;--ink:#1c2523;--sub:#5b6864;--line:#cdd3cf;--accent:#1f7a6d;--on:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111716;--panel:#1a2220;--ink:#e8eeec;--sub:#9aa8a4;--line:#33403d;--accent:#4fc4b0;--on:#0b1412;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111716;--panel:#1a2220;--ink:#e8eeec;--sub:#9aa8a4;--line:#33403d;--accent:#4fc4b0;--on:#0b1412;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.6}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.25rem;margin:0 0 12px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:180px;display:flex;align-items:center;justify-content:center;padding:8px}
+canvas{display:block;touch-action:none;transform-origin:0 0}
+#vp{overflow:hidden;border-radius:4px;touch-action:none}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center;color:#fff}
+#ov[hidden]{display:none}
+#hint{color:var(--sub);text-align:center;padding:24px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:12px;padding:12px 14px}
+.row{display:grid;grid-template-columns:8.5em 1fr 3em;align-items:center;gap:8px;padding:6px 0}
+.row output{color:var(--sub);text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent);height:32px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{background:var(--accent);color:var(--on);border:1px solid var(--accent);border-radius:8px;padding:11px 14px;font-size:1rem;font-weight:600;cursor:pointer}
+.btn.sub{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.sub[aria-pressed=true]{background:var(--accent);color:var(--on);border-color:var(--accent)}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn:disabled{opacity:.4;cursor:default}
+label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)}
+.note{color:var(--sub);font-size:.85rem;margin:8px 0 0}
+</style></head>
+<body><main>
+<h1>やさしい写真補正(試作品)</h1>
+<div class="stage"><p id="hint">「写真を選ぶ」で写真を読み込み、直したい部分を指でなぞってください。</p><div id="vp" hidden><canvas id="view"></canvas></div></div>
+<div class="btns">
+  <label class="btn" for="file">写真を選ぶ</label>
+  <input id="file" type="file" accept="image/*" hidden>
+  <button class="btn sub" id="undo" type="button" disabled>一つ戻る</button>
+  <button class="btn sub" id="redo" type="button" disabled>一つ進む</button>
+  <button class="btn sub" id="clear" type="button">すべてやり直す</button>
+</div>
+<div class="btns">
+  <button class="btn sub" id="zin" type="button">拡大</button>
+  <button class="btn sub" id="zout" type="button">縮小</button>
+  <button class="btn sub" id="zfit" type="button">全体</button>
+  <output id="zv" style="align-self:center;color:var(--sub)">100%</output>
+  <button class="btn" id="save" type="button" style="margin-left:auto">写真を保存</button>
+</div>
+<p class="note" id="smsg"></p>
+<div class="panel">
+  <div class="btns" style="margin:0 0 6px" id="modes"></div>
+  <p class="note" id="mnote"></p>
+  <div class="row"><span>補正の強さ</span><input id="amt" type="range" min="0" max="100" value="80"><output id="amtv">80</output></div>
+  <div class="row"><span>ブラシの大きさ</span><input id="brush" type="range" min="3" max="30" value="12"><output id="brushv">12</output></div>
+  <div class="row"><span>補正前と比較</span><input id="cmp" type="range" min="0" max="100" value="0"><output id="cmpv">0</output></div>
+  <label class="chk"><input id="show" type="checkbox" checked>なめらかにした範囲を色で表示する</label>
+  <p class="note">比較:右へ動かすほど、画面の左側が「補正前」になります。0で全体が補正後です。</p>
+  <p class="note">拡大:2本の指で広げる・つまむと拡大・縮小、2本の指で動かすと移動します。1本の指では範囲を指定します。</p>
+</div>
+</main>
+<div id="ov" hidden><img id="ovimg" alt="補正後の写真" style="max-width:100%;max-height:68vh"><p>写真を長押しして「“写真”に追加」を選ぶと保存できます。</p><button class="btn" id="ovx" type="button" onclick="document.getElementById('ov').hidden=true">閉じる</button></div>
+<script>
+const $=id=>document.getElementById(id);
+const view=$('view'),vctx=view.getContext('2d');
+const mk=()=>document.createElement('canvas');
+const orig=mk(),wc=mk(),blur=mk(),mask=mk(),res=mk(),layer=mk(),tint=mk();
+let W=0,H=0,has=false,drawing=false,last=null,cur=null,queued=false,wDirty=true,timer=null;
+let srcData=null,DX=null,DY=null,mode='smooth',ring=null,rx0=0,ry0=0,rx1=0,ry1=0,full=true;
+const MODES=[
+ ['smooth','なめらかにする','なぞった部分の細かいデコボコや色むらをぼかします。'],
+ ['push','ずらす','なぞった方向へ、写真の形を少しずつ動かします。'],
+ ['bulge','ふくらませる','指を置いた場所を、中心から外へふくらませます。押さえつけたへこみを戻すときに使います。'],
+ ['pinch','へこませる','指を置いた場所を、中心へ引きしめます。']
+];
+MODES.forEach(([k,t])=>{const b=document.createElement('button');b.type='button';b.className='btn sub';b.textContent=t;b.dataset.k=k;
+ b.onclick=()=>{mode=k;setMode()};$('modes').appendChild(b)});
+function setMode(){document.querySelectorAll('#modes .btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===mode));
+ $('mnote').textContent=MODES.find(m=>m[0]===mode)[2]}
+setMode();
+
+$('file').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const img=new Image();
+  img.onload=()=>{
+    const s=Math.min(1,1000/Math.max(img.width,img.height));
+    W=Math.round(img.width*s);H=Math.round(img.height*s);
+    [orig,wc,blur,mask,res,layer,tint,view].forEach(c=>{c.width=W;c.height=H});
+    orig.getContext('2d').drawImage(img,0,0,W,H);
+    srcData=orig.getContext('2d').getImageData(0,0,W,H).data;
+    DX=new Float32Array(W*H);DY=new Float32Array(W*H);
+    has=true;wDirty=true;full=true;hist.u=[];hist.r=[];pre=null;sb=null;upd();$('hint').hidden=true;$('vp').hidden=false;fit();
+    URL.revokeObjectURL(img.src);schedule();
+  };
+  img.src=URL.createObjectURL(f);
+});
+
+// 形を変える:各点が「どこの色を持ってくるか」をずらして作る
+function doWarp(){
+  if(full){rx0=0;ry0=0;rx1=W;ry1=H}
+  const rw=rx1-rx0,rh=ry1-ry0;if(rw<=0||rh<=0)return;
+  const s=$('amt').value/100,out=wc.getContext('2d').createImageData(rw,rh),o=out.data,d=srcData;
+  for(let y=ry0;y<ry1;y++)for(let x=rx0;x<rx1;x++){
+    const i=y*W+x;
+    let sx=x+DX[i]*s,sy=y+DY[i]*s;
+    sx=sx<0?0:sx>W-1.001?W-1.001:sx;sy=sy<0?0:sy>H-1.001?H-1.001:sy;
+    const x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0,a=(y0*W+x0)*4,b=a+4,c=a+W*4,e=c+4,p=((y-ry0)*rw+(x-rx0))*4;
+    for(let k=0;k<4;k++)o[p+k]=(d[a+k]*(1-fx)+d[b+k]*fx)*(1-fy)+(d[c+k]*(1-fx)+d[e+k]*fx)*fy;
+  }
+  wc.getContext('2d').putImageData(out,rx0,ry0);full=false;rx0=W;ry0=H;rx1=0;ry1=0;
+}
+function makeBlur(){
+  const k=Math.max(4,Math.round(Math.max(W,H)/160));
+  const sm=mk();sm.width=Math.ceil(W/k);sm.height=Math.ceil(H/k);
+  const s=sm.getContext('2d');s.imageSmoothingQuality='high';s.drawImage(wc,0,0,sm.width,sm.height);
+  const b=blur.getContext('2d');b.imageSmoothingQuality='high';b.clearRect(0,0,W,H);b.drawImage(sm,0,0,W,H);
+}
+
+const radius=()=>W*$('brush').value/150/Z;
+function pos(e){const r=view.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function stamp(x,y){
+  const R=radius(),m=mask.getContext('2d');
+  const g=m.createRadialGradient(x,y,R*.25,x,y,R);
+  g.addColorStop(0,'rgba(255,255,255,.45)');g.addColorStop(1,'rgba(255,255,255,0)');
+  m.fillStyle=g;m.fillRect(x-R,y-R,R*2,R*2);ext(x-R,y-R,x+R,y+R);
+}
+function eachPx(cx,cy,fn){
+  const R=radius();
+  for(let y=Math.max(0,Math.floor(cy-R));y<Math.min(H,cy+R);y++)for(let x=Math.max(0,Math.floor(cx-R));x<Math.min(W,cx+R);x++){
+    const dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy);if(d>=R)continue;
+    const t=1-d/R;fn(y*W+x,dx,dy,t*t*(3-2*t),R);
+  }
+  wDirty=true;
+  rx0=Math.min(rx0,Math.max(0,Math.floor(cx-R)));ry0=Math.min(ry0,Math.max(0,Math.floor(cy-R)));
+  rx1=Math.max(rx1,Math.min(W,Math.ceil(cx+R)));ry1=Math.max(ry1,Math.min(H,Math.ceil(cy+R)));ext(cx-R,cy-R,cx+R,cy+R);
+}
+function applyHold(){
+  if(!cur)return;
+  const sign=mode==='bulge'?1:-1;
+  eachPx(cur.x,cur.y,(i,dx,dy,w,R)=>{DX[i]-=sign*dx/R*w*10/Z;DY[i]-=sign*dy/R*w*10/Z});
+  schedule();
+}
+function onMove(p){
+  if(mode==='smooth'){
+    if(last){const d=Math.hypot(p.x-last.x,p.y-last.y),st=Math.max(2,radius()*.3);
+      for(let t=st;t<d;t+=st)stamp(last.x+(p.x-last.x)*t/d,last.y+(p.y-last.y)*t/d)}
+    stamp(p.x,p.y);
+  }else if(mode==='push'&&last){
+    const mx=p.x-last.x,my=p.y-last.y;
+    eachPx(p.x,p.y,(i,dx,dy,w)=>{DX[i]-=mx*w*.8;DY[i]-=my*w*.8});
+  }
+  last=p;cur=p;ring=p;
+}
+const hist={u:[],r:[]};let pre=null,sb=null;
+function ext(a,b,c,d){a=Math.max(0,Math.floor(a));b=Math.max(0,Math.floor(b));c=Math.min(W,Math.ceil(c));d=Math.min(H,Math.ceil(d));
+  if(!sb)sb={x0:a,y0:b,x1:c,y1:d};else{sb.x0=Math.min(sb.x0,a);sb.y0=Math.min(sb.y0,b);sb.x1=Math.max(sb.x1,c);sb.y1=Math.max(sb.y1,d)}}
+function snapAll(){return{dx:DX.slice(),dy:DY.slice(),m:mask.getContext('2d').getImageData(0,0,W,H).data}}
+function crop(s,r){
+  const w=r.x1-r.x0,h=r.y1-r.y0,dx=new Float32Array(w*h),dy=new Float32Array(w*h),m=new Uint8ClampedArray(w*h*4);
+  for(let y=0;y<h;y++){const si=(r.y0+y)*W+r.x0;
+    dx.set(s.dx.subarray(si,si+w),y*w);dy.set(s.dy.subarray(si,si+w),y*w);m.set(s.m.subarray(si*4,(si+w)*4),y*w*4)}
+  return{r:{x0:r.x0,y0:r.y0,x1:r.x1,y1:r.y1},dx,dy,m,w,h};
+}
+function capture(r){
+  const w=r.x1-r.x0,h=r.y1-r.y0,m=mask.getContext('2d').getImageData(r.x0,r.y0,w,h).data;
+  const dx=new Float32Array(w*h),dy=new Float32Array(w*h);
+  for(let y=0;y<h;y++){const si=(r.y0+y)*W+r.x0;dx.set(DX.subarray(si,si+w),y*w);dy.set(DY.subarray(si,si+w),y*w)}
+  return{r,dx,dy,m,w,h};
+}
+function restore(c){
+  const r=c.r,w=c.w,h=c.h;
+  for(let y=0;y<h;y++){const si=(r.y0+y)*W+r.x0;DX.set(c.dx.subarray(y*w,(y+1)*w),si);DY.set(c.dy.subarray(y*w,(y+1)*w),si)}
+  mask.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(c.m),w,h),r.x0,r.y0);
+  wDirty=true;rx0=Math.min(rx0,r.x0);ry0=Math.min(ry0,r.y0);rx1=Math.max(rx1,r.x1);ry1=Math.max(ry1,r.y1);
+}
+function push(s,b){hist.u.push(crop(s,b));if(hist.u.length>20)hist.u.shift();hist.r=[];upd()}
+function undo(){const c=hist.u.pop();if(!c)return;hist.r.push(capture(c.r));restore(c);upd();schedule()}
+function redo(){const c=hist.r.pop();if(!c)return;hist.u.push(capture(c.r));restore(c);upd();schedule()}
+function upd(){$('undo').disabled=!hist.u.length;$('redo').disabled=!hist.r.length}
+$('undo').onclick=undo;$('redo').onclick=redo;
+const ptrs=new Map();let g=null,pend=null;
+const vpPt=e=>{const r=$('vp').getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+function stopDraw(){if(pre){if(sb)push(pre,sb);pre=null;sb=null}drawing=false;last=null;cur=null;ring=null;clearInterval(timer)}
+function beginDraw(e){
+  drawing=true;last=null;pre=snapAll();sb=null;onMove(pos(e));
+  if(mode==='bulge'||mode==='pinch'){clearInterval(timer);applyHold();applyHold();applyHold();timer=setInterval(applyHold,40)}
+  schedule();
+}
+function gest(){const [a,b]=[...ptrs.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+view.addEventListener('pointerdown',e=>{
+  if(!has)return;
+  view.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,vpPt(e));
+  if(ptrs.size>=2){clearTimeout(pend);stopDraw();const s=gest();g={d:s.d,z:Z,x:s.x,y:s.y,tx:TX,ty:TY};schedule();return}
+  pend=setTimeout(()=>{if(ptrs.size===1)beginDraw(e)},70);
+});
+view.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId))return;
+  ptrs.set(e.pointerId,vpPt(e));
+  if(ptrs.size>=2&&g){
+    const s=gest(),cx=(g.x-g.tx)/g.z,cy=(g.y-g.ty)/g.z;
+    Z=g.z*s.d/g.d;applyT();
+    TX=s.x-cx*Z;TY=s.y-cy*Z;applyT();return;
+  }
+  if(drawing){onMove(pos(e));schedule()}
+});
+['pointerup','pointercancel'].forEach(t=>view.addEventListener(t,e=>{
+  ptrs.delete(e.pointerId);clearTimeout(pend);
+  if(ptrs.size<2)g=null;
+  stopDraw();schedule();
+}));
+
+let Z=1,TX=0,TY=0,FW=0,FH=0,dl=null;
+function fit(){
+  const aw=$('vp').parentElement.clientWidth-16,mh=innerHeight*.58,f=Math.min(1,aw/W,mh/H);
+  FW=Math.round(W*f);FH=Math.round(H*f);
+  view.style.width=FW+'px';view.style.height=FH+'px';
+  $('vp').style.width=FW+'px';$('vp').style.height=FH+'px';
+  Z=1;TX=0;TY=0;applyT();
+}
+function applyT(){
+  Z=Math.min(8,Math.max(1,Z));
+  TX=Math.min(0,Math.max(FW-FW*Z,TX));TY=Math.min(0,Math.max(FH-FH*Z,TY));
+  view.style.transform='translate('+TX+'px,'+TY+'px) scale('+Z+')';
+  $('zv').textContent=Math.round(Z*100)+'%';
+}
+function zoomAt(nz,sx,sy){
+  nz=Math.min(8,Math.max(1,nz));const cx=(sx-TX)/Z,cy=(sy-TY)/Z;
+  Z=nz;TX=sx-cx*Z;TY=sy-cy*Z;applyT();
+}
+addEventListener('resize',()=>{if(has)fit()});
+$('zin').onclick=()=>{if(has)zoomAt(Z*1.5,FW/2,FH/2)};
+$('zout').onclick=()=>{if(has)zoomAt(Z/1.5,FW/2,FH/2)};
+$('zfit').onclick=()=>{if(has){Z=1;TX=0;TY=0;applyT()}};
+(async()=>{try{dl=await window.claude.use('downloads')}catch(e){dl=null}})();
+$('ovx').onclick=()=>{$('ov').hidden=true};
+$('save').onclick=async()=>{
+  if(!has){$('smsg').textContent='先に写真を選んでください。';return}
+  render();
+  const msg=t=>{$('smsg').textContent=t};
+  if(dl){
+    const blob=await new Promise(r=>res.toBlob(r,'image/jpeg',.92));
+    try{await dl.save({filename:'retouched.jpg',data:blob});msg('保存しました。')}
+    catch(err){msg(err&&err.code==='declined'?'保存をキャンセルしました。':'保存できませんでした。もう一度お試しください。')}
+  }else{
+    $('ovimg').src=res.toDataURL('image/jpeg',.92);$('ov').hidden=false;
+  }
+};
+function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})}
+function render(){
+  if(!has)return;
+  if(wDirty){doWarp();makeBlur();wDirty=false}
+  const r=res.getContext('2d');
+  r.globalAlpha=1;r.clearRect(0,0,W,H);r.drawImage(wc,0,0);
+  const l=layer.getContext('2d');
+  l.globalCompositeOperation='source-over';l.clearRect(0,0,W,H);l.drawImage(blur,0,0);
+  l.globalCompositeOperation='destination-in';l.drawImage(mask,0,0);
+  r.globalAlpha=$('amt').value/100;r.drawImage(layer,0,0);r.globalAlpha=1;
+  const split=W*$('cmp').value/100;
+  vctx.clearRect(0,0,W,H);vctx.drawImage(res,0,0);
+  if(split>0){
+    vctx.save();vctx.beginPath();vctx.rect(0,0,split,H);vctx.clip();vctx.drawImage(orig,0,0);vctx.restore();
+    vctx.fillStyle='#fff';vctx.fillRect(split-1.5,0,3,H);
+  }
+  if(ring){vctx.strokeStyle='#fff';vctx.lineWidth=3;vctx.beginPath();vctx.arc(ring.x,ring.y,radius(),0,7);vctx.stroke()}
+  if($('show').checked){
+    const t=tint.getContext('2d');
+    t.globalCompositeOperation='source-over';t.clearRect(0,0,W,H);
+    t.fillStyle='#ff4d6d';t.fillRect(0,0,W,H);
+    t.globalCompositeOperation='destination-in';t.drawImage(mask,0,0);
+    vctx.globalAlpha=.45;vctx.drawImage(tint,0,0);vctx.globalAlpha=1;
+  }
+}
+[['amt','amtv'],['brush','brushv'],['cmp','cmpv']].forEach(([a,b])=>{
+  $(a).addEventListener('input',()=>{$(b).textContent=$(a).value;if(a==='amt'){wDirty=true;full=true}schedule()});
+});
+$('show').addEventListener('change',schedule);
+$('clear').addEventListener('click',()=>{if(!has)return;push(snapAll(),{x0:0,y0:0,x1:W,y1:H});mask.getContext('2d').clearRect(0,0,W,H);DX.fill(0);DY.fill(0);wDirty=true;full=true;schedule()});
+</script>
+</body></html>
