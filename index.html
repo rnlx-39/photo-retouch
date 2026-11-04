@@ -51,8 +51,8 @@ label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)
 <p class="note" id="smsg"></p>
 <div class="panel">
   <div class="btns" style="margin:0 0 6px"><button class="btn" id="ai" type="button">AIで親指を探して補正</button></div>
-  <div class="row" style="grid-template-columns:8.5em 1fr"><span>補正する場所</span><select id="aitgt"><option value="tip">親指の先</option><option value="base">親指の付け根</option></select></div>
-  <p class="note" id="aimsg">写真を選んだあと、下で選んだモード(なめらかにする・ふくらませる・へこませる)で、見つけた場所を補正します。初回は、AIの準備に少し時間がかかります。</p>
+  <div class="row" style="grid-template-columns:8.5em 1fr"><span>補正する場所</span><select id="aitgt"><option value="base">親指の付け根</option><option value="tip">親指の先</option></select></div>
+  <p class="note" id="aimsg">「補正する場所」が親指の付け根のとき、下で「へこませる」を選ぶと付け根が細くなり、「ふくらませる」を選ぶと太くなります。押すたびに重ねて補正されます。初回は、AIの準備に少し時間がかかります。</p>
 </div>
 <div class="panel">
   <div class="btns" style="margin:0 0 6px" id="modes"></div>
@@ -296,12 +296,30 @@ function drawAi(){
   if(aiPts.t){vctx.strokeStyle='#ff4d6d';vctx.lineWidth=r/2.5;vctx.beginPath();vctx.arc(aiPts.t.x,aiPts.t.y,r*2.4,0,7);vctx.stroke()}
   vctx.restore();
 }
-function applyAt(t){
+// 親指の付け根を、親指の軸に向かって細く(または太く)する
+function slim(L,sign){
+  const c={x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
+  const hs=Math.hypot(L[0].x-L[9].x,L[0].y-L[9].y)||W*.2;
+  let ux=L[2].x-L[1].x,uy=L[2].y-L[1].y;const ul=Math.hypot(ux,uy)||1;ux/=ul;uy/=ul;
+  const nx=-uy,ny=ux,Ra=hs*.5,Rn=hs*.32,amt=hs*.18,R=Math.max(Ra,Rn);
+  const x0=Math.max(0,Math.floor(c.x-R)),x1=Math.min(W,Math.ceil(c.x+R));
+  const y0=Math.max(0,Math.floor(c.y-R)),y1=Math.min(H,Math.ceil(c.y+R));
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+    const dx=x-c.x,dy=y-c.y,a=(dx*ux+dy*uy)/Ra,b=(dx*nx+dy*ny)/Rn,d=Math.hypot(a,b);
+    if(d>=1)continue;
+    const t=1-d,w=t*t*(3-2*t),i=y*W+x,D=sign*amt*w*b;
+    DX[i]+=nx*D;DY[i]+=ny*D;
+  }
+  wDirty=true;rx0=Math.min(rx0,x0);ry0=Math.min(ry0,y0);rx1=Math.max(rx1,x1);ry1=Math.max(ry1,y1);
+  ext(x0,y0,x1,y1);
+}
+function applyAt(t,L,tg){
   const sz=Z;Z=1;
   try{
     pre=snapAll();sb=null;
     if(mode==='smooth'){for(let i=0;i<5;i++)stamp(t.x,t.y)}
-    else{cur=t;for(let i=0;i<80;i++)applyHold();cur=null}
+    else if(tg==='base'){slim(L,mode==='pinch'?1:-1)}
+    else{cur=t;for(let i=0;i<30;i++)applyHold();cur=null}
     if(sb)push(pre,sb);
     pre=null;sb=null;
   }finally{Z=sz}
@@ -319,9 +337,10 @@ $('ai').onclick=async()=>{
     const hands=(res.landmarks||[]).map(l=>l.map(p=>({x:p.x*W,y:p.y*H})));
     if(!hands.length){aiPts=null;say('手が見つかりませんでした。手が大きく写っている写真で試してください。');return}
     const L=hands[0];
-    const t=$('aitgt').value==='tip'?L[4]:{x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
+    const tg=$('aitgt').value;
+    const t=tg==='tip'?L[4]:{x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
     aiPts={hands,t};
-    applyAt(t);
+    applyAt(t,L,tg);
     say('手を'+hands.length+'つ見つけて、赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、補正する場所を変えて試してください。');
   }catch(e){
     say('AIを使えませんでした。['+aiStage+'] '+((e&&e.message)?e.message:String(e)));
