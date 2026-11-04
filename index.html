@@ -301,7 +301,7 @@ function applyAt(t){
   try{
     pre=snapAll();sb=null;
     if(mode==='smooth'){for(let i=0;i<5;i++)stamp(t.x,t.y)}
-    else{cur=t;for(let i=0;i<25;i++)applyHold();cur=null}
+    else{cur=t;for(let i=0;i<80;i++)applyHold();cur=null}
     if(sb)push(pre,sb);
     pre=null;sb=null;
   }finally{Z=sz}
