@@ -27,6 +27,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:32px}
 .btn.sub[aria-pressed=true]{background:var(--accent);color:var(--on);border-color:var(--accent)}
 .btn:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .btn:disabled{opacity:.4;cursor:default}
+select{font-size:1rem;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
 label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)}
 .note{color:var(--sub);font-size:.85rem;margin:8px 0 0}
 </style></head>
@@ -49,6 +50,11 @@ label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)
 </div>
 <p class="note" id="smsg"></p>
 <div class="panel">
+  <div class="btns" style="margin:0 0 6px"><button class="btn" id="ai" type="button">AIで親指を探して補正</button></div>
+  <div class="row" style="grid-template-columns:8.5em 1fr"><span>補正する場所</span><select id="aitgt"><option value="tip">親指の先</option><option value="base">親指の付け根</option></select></div>
+  <p class="note" id="aimsg">写真を選んだあと、下で選んだモード(なめらかにする・ふくらませる・へこませる)で、見つけた場所を補正します。初回は、AIの準備に少し時間がかかります。</p>
+</div>
+<div class="panel">
   <div class="btns" style="margin:0 0 6px" id="modes"></div>
   <p class="note" id="mnote"></p>
   <div class="row"><span>補正の強さ</span><input id="amt" type="range" min="0" max="100" value="80"><output id="amtv">80</output></div>
@@ -62,6 +68,7 @@ label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)
 <div id="ov" hidden><img id="ovimg" alt="補正後の写真" style="max-width:100%;max-height:68vh"><p>写真を長押しして「“写真”に追加」を選ぶと保存できます。</p><button class="btn" id="ovx" type="button" onclick="document.getElementById('ov').hidden=true">閉じる</button></div>
 <script>
 const $=id=>document.getElementById(id);
+addEventListener('error',e=>{const m=$('smsg');if(m)m.textContent='エラー: '+e.message});
 const view=$('view'),vctx=view.getContext('2d');
 const mk=()=>document.createElement('canvas');
 const orig=mk(),wc=mk(),blur=mk(),mask=mk(),res=mk(),layer=mk(),tint=mk();
@@ -79,20 +86,36 @@ function setMode(){document.querySelectorAll('#modes .btn').forEach(b=>b.setAttr
  $('mnote').textContent=MODES.find(m=>m[0]===mode)[2]}
 setMode();
 
-$('file').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const img=new Image();
-  img.onload=()=>{
-    const s=Math.min(1,1000/Math.max(img.width,img.height));
-    W=Math.round(img.width*s);H=Math.round(img.height*s);
-    [orig,wc,blur,mask,res,layer,tint,view].forEach(c=>{c.width=W;c.height=H});
-    orig.getContext('2d').drawImage(img,0,0,W,H);
-    srcData=orig.getContext('2d').getImageData(0,0,W,H).data;
-    DX=new Float32Array(W*H);DY=new Float32Array(W*H);
-    has=true;wDirty=true;full=true;hist.u=[];hist.r=[];pre=null;sb=null;upd();$('hint').hidden=true;$('vp').hidden=false;fit();
-    URL.revokeObjectURL(img.src);schedule();
-  };
-  img.src=URL.createObjectURL(f);
+function start(src){
+  const s=Math.min(1,1000/Math.max(src.width,src.height));
+  W=Math.round(src.width*s);H=Math.round(src.height*s);
+  [orig,wc,blur,mask,res,layer,tint,view].forEach(c=>{c.width=W;c.height=H});
+  orig.getContext('2d').drawImage(src,0,0,W,H);
+  srcData=orig.getContext('2d').getImageData(0,0,W,H).data;
+  DX=new Float32Array(W*H);DY=new Float32Array(W*H);
+  has=true;wDirty=true;full=true;hist.u=[];hist.r=[];pre=null;sb=null;aiPts=null;upd();
+  $('hint').hidden=true;$('vp').hidden=false;fit();schedule();
+}
+async function loadFile(f){
+  const info=(f.type||'種類不明')+', '+Math.round(f.size/1024)+'KB';
+  const fail=m=>{$('hint').hidden=false;$('hint').textContent='この写真は読み込めませんでした('+info+')。'+m};
+  let buf;
+  try{buf=await f.arrayBuffer()}catch(err){fail('ファイルを読み取れませんでした。');return}
+  if(!buf.byteLength){fail('ファイルが空です。写真アプリで一度開いてから、もう一度選んでください。');return}
+  const blob=new Blob([buf],{type:f.type||'image/jpeg'});
+  let src=null;
+  try{
+    src=await new Promise((ok,ng)=>{const im=new Image(),u=URL.createObjectURL(blob);
+      im.onload=()=>{URL.revokeObjectURL(u);ok(im)};im.onerror=()=>ng(new Error('img'));im.src=u});
+  }catch(e1){
+    try{src=await createImageBitmap(blob)}catch(e2){fail('この形式は開けない可能性があります。');return}
+  }
+  try{start(src)}catch(e3){fail('処理中にエラーが起きました:'+e3.message)}
+}
+$('file').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  await loadFile(f);
+  e.target.value='';
 });
 
 // 形を変える:各点が「どこの色を持ってくるか」をずらして作る
@@ -245,6 +268,65 @@ $('save').onclick=async()=>{
     $('ovimg').src=res.toDataURL('image/jpeg',.92);$('ov').hidden=false;
   }
 };
+let aiPts=null,hl=null;
+const MPV='0.10.14',MPC='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MPV;
+let aiStage='';
+async function getHL(){
+  if(hl)return hl;
+  aiStage='ライブラリの読み込み';
+  let m;
+  try{m=await import(MPC+'/vision_bundle.mjs')}
+  catch(e0){m=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MPV+'/+esm')}
+  aiStage='AIの準備';
+  const fs=await m.FilesetResolver.forVisionTasks(MPC+'/wasm');
+  aiStage='AIモデルの読み込み';
+  hl=await m.HandLandmarker.createFromOptions(fs,{
+    baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'CPU'},
+    runningMode:'IMAGE',numHands:2,minHandDetectionConfidence:.3,minHandPresenceConfidence:.3});
+  return hl;
+}
+function drawAi(){
+  const f=FW/W,r=7/(f*Z);
+  vctx.save();
+  aiPts.hands.forEach(h=>h.forEach((p,i)=>{
+    const th=i>=1&&i<=4;
+    vctx.beginPath();vctx.arc(p.x,p.y,r*(th?1:.55),0,7);
+    vctx.fillStyle=th?'#ffd23f':'rgba(255,255,255,.85)';vctx.fill();
+  }));
+  if(aiPts.t){vctx.strokeStyle='#ff4d6d';vctx.lineWidth=r/2.5;vctx.beginPath();vctx.arc(aiPts.t.x,aiPts.t.y,r*2.4,0,7);vctx.stroke()}
+  vctx.restore();
+}
+function applyAt(t){
+  const sz=Z;Z=1;
+  try{
+    pre=snapAll();sb=null;
+    if(mode==='smooth'){for(let i=0;i<5;i++)stamp(t.x,t.y)}
+    else{cur=t;for(let i=0;i<25;i++)applyHold();cur=null}
+    if(sb)push(pre,sb);
+    pre=null;sb=null;
+  }finally{Z=sz}
+}
+$('ai').onclick=async()=>{
+  const say=t=>{$('aimsg').textContent=t};
+  if(!has){say('先に写真を選んでください。');return}
+  if(mode==='push'){say('「ずらす」は自動では使えません。ほかのモードを選んでください。');return}
+  $('ai').disabled=true;
+  try{
+    say('AIを準備しています。初回は少し時間がかかります…');
+    const h=await getHL();
+    say('手を探しています…');
+    aiStage='手の検出';const res=h.detect(orig);
+    const hands=(res.landmarks||[]).map(l=>l.map(p=>({x:p.x*W,y:p.y*H})));
+    if(!hands.length){aiPts=null;say('手が見つかりませんでした。手が大きく写っている写真で試してください。');return}
+    const L=hands[0];
+    const t=$('aitgt').value==='tip'?L[4]:{x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
+    aiPts={hands,t};
+    applyAt(t);
+    say('手を'+hands.length+'つ見つけて、赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、補正する場所を変えて試してください。');
+  }catch(e){
+    say('AIを使えませんでした。['+aiStage+'] '+((e&&e.message)?e.message:String(e)));
+  }finally{$('ai').disabled=false;schedule()}
+};
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})}
 function render(){
   if(!has)return;
@@ -261,6 +343,7 @@ function render(){
     vctx.save();vctx.beginPath();vctx.rect(0,0,split,H);vctx.clip();vctx.drawImage(orig,0,0);vctx.restore();
     vctx.fillStyle='#fff';vctx.fillRect(split-1.5,0,3,H);
   }
+  if(aiPts)drawAi();
   if(ring){vctx.strokeStyle='#fff';vctx.lineWidth=3;vctx.beginPath();vctx.arc(ring.x,ring.y,radius(),0,7);vctx.stroke()}
   if($('show').checked){
     const t=tint.getContext('2d');
@@ -274,6 +357,6 @@ function render(){
   $(a).addEventListener('input',()=>{$(b).textContent=$(a).value;if(a==='amt'){wDirty=true;full=true}schedule()});
 });
 $('show').addEventListener('change',schedule);
-$('clear').addEventListener('click',()=>{if(!has)return;push(snapAll(),{x0:0,y0:0,x1:W,y1:H});mask.getContext('2d').clearRect(0,0,W,H);DX.fill(0);DY.fill(0);wDirty=true;full=true;schedule()});
+$('clear').addEventListener('click',()=>{if(!has)return;push(snapAll(),{x0:0,y0:0,x1:W,y1:H});mask.getContext('2d').clearRect(0,0,W,H);DX.fill(0);DY.fill(0);aiPts=null;wDirty=true;full=true;schedule()});
 </script>
 </body></html>
