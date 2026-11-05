@@ -3,14 +3,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>やさしい写真補正</title>
 <style>
-:root{--bg:#eceeea;--panel:#fbfbf8;--ink:#1c2523;--sub:#5b6864;--line:#cdd3cf;--accent:#1f7a6d;--on:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111716;--panel:#1a2220;--ink:#e8eeec;--sub:#9aa8a4;--line:#33403d;--accent:#4fc4b0;--on:#0b1412;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#111716;--panel:#1a2220;--ink:#e8eeec;--sub:#9aa8a4;--line:#33403d;--accent:#4fc4b0;--on:#0b1412;color-scheme:dark}
+:root{--bg:#fff4f8;--panel:#ffffff;--ink:#3b2a31;--sub:#7a5f6a;--line:#f2cddb;--accent:#c2336b;--on:#fff;--soft:#fde8ef;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1418;--panel:#271b21;--ink:#f8eaf0;--sub:#cdb0bc;--line:#4b3541;--accent:#ff8fb5;--on:#2a0e1a;--soft:#33222a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1418;--panel:#271b21;--ink:#f8eaf0;--sub:#cdb0bc;--line:#4b3541;--accent:#ff8fb5;--on:#2a0e1a;--soft:#33222a;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.6}
 main{max-width:760px;margin:0 auto;padding:16px}
-h1{font-size:1.25rem;margin:0 0 12px}
+h1{font-size:1.3rem;margin:0}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:180px;display:flex;align-items:center;justify-content:center;padding:8px}
 canvas{display:block;touch-action:none;transform-origin:0 0}
 #vp{overflow:hidden;border-radius:4px;touch-action:none}
@@ -29,10 +29,62 @@ input[type=range]{width:100%;accent-color:var(--accent);height:32px}
 .btn:disabled{opacity:.4;cursor:default}
 select{font-size:1rem;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
 label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)}
-.note{color:var(--sub);font-size:.85rem;margin:8px 0 0}
+.note{color:var(--sub);font-size:.92rem;margin:8px 0 0}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.tag{font-size:.8rem;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;margin-left:8px;vertical-align:middle}
+.help{white-space:nowrap}
+.btn.big{padding:16px 20px;font-size:1.1rem}
+#start{min-height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center;padding:20px}
+#start[hidden],#editor[hidden],#guide[hidden],#handpick[hidden]{display:none}
+.startcard{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 8px 30px rgba(194,51,107,.12)}
+.logo{font-size:3rem;line-height:1}
+.appname{font-size:1.7rem;margin:10px 0 8px;color:var(--accent)}
+.lead{font-size:1.05rem;line-height:1.8;margin:8px 0}
+.startcard .btn{width:100%;margin-top:12px}
+.startcard label.chk{justify-content:center;margin-top:10px;font-size:1rem}
+#guide{position:fixed;inset:0;z-index:30;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.gwrap{max-width:760px;margin:0 auto;padding:0 16px 48px}
+.ghead{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ghead h2{margin:0;font-size:1.3rem;color:var(--accent)}
+.gintro{font-size:1rem;color:var(--sub);margin:12px 0 4px}
+details.g{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:10px 0}
+details.g>summary{padding:14px 16px;font-weight:700;font-size:1.08rem;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+details.g>summary::-webkit-details-marker{display:none}
+details.g>summary::after{content:"＋";margin-left:auto;color:var(--accent);font-weight:800}
+details.g[open]>summary::after{content:"－"}
+details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:14px}
+.gbody{padding:0 16px 16px;font-size:1.02rem;line-height:1.8}
+.gbody h3{font-size:1.02rem;margin:16px 0 4px;color:var(--accent)}
+.gbody p{margin:6px 0}
+.gbody ul,.gbody ol{margin:6px 0;padding-left:1.4em}
+.gbody li{margin:4px 0}
+.step{display:flex;gap:12px;background:var(--soft);border-radius:12px;padding:12px;margin:10px 0}
+.num{flex:none;min-width:3.6rem;height:2.2rem;border-radius:999px;background:var(--accent);color:var(--on);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;padding:0 10px}
+.step b{display:block;font-size:1.05rem;margin-bottom:2px}
+.term{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:.96rem;margin:10px 0}
+.mode{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0}
+.mode b{color:var(--accent)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
+.chip{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:.95rem}
+.kbd{display:inline-block;border:1px solid var(--line);background:var(--soft);border-radius:6px;padding:0 6px;font-weight:700;font-size:.95rem}
+@media (max-width:480px){.step{flex-direction:column;gap:6px}}
+.gfoot{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
 </style></head>
-<body><main>
-<h1>やさしい写真補正(試作品)</h1>
+<body>
+<section id="start">
+  <div class="startcard">
+    <div class="logo" aria-hidden="true">🌸</div>
+    <h1 class="appname">やさしい写真補正</h1>
+    <p class="lead">写真の一部を、AIや指でなぞって、やさしく整えるアプリです。手の親指の付け根などを、細く見せたり、なめらかにしたりできます。</p>
+    <p class="lead">写真は、お使いの端末の中だけで処理されます。</p>
+    <button class="btn big" id="goEdit" type="button">写真を補正する</button>
+    <button class="btn sub big" id="goGuide" type="button">はじめての方へ・使い方</button>
+    <label class="chk"><input id="skipStart" type="checkbox">次回からは編集画面を直接開く</label>
+  </div>
+</section>
+<main id="editor" hidden>
+<div class="top"><h1>やさしい写真補正<span class="tag">試作品</span></h1><button class="btn sub help" id="helpBtn" type="button" aria-label="使い方ガイドを開く">？ 使い方</button></div>
 <div class="stage"><p id="hint">「写真を選ぶ」で写真を読み込み、直したい部分を指でなぞってください。</p><div id="vp" hidden><canvas id="view"></canvas></div></div>
 <div class="btns">
   <label class="btn" for="file">写真を選ぶ</label>
@@ -53,6 +105,7 @@ label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)
   <div class="btns" style="margin:0 0 6px"><button class="btn" id="ai" type="button">AIで親指を探して補正</button></div>
   <div class="row" style="grid-template-columns:8.5em 1fr"><span>補正する場所</span><select id="aitgt"><option value="base">親指の付け根</option><option value="tip">親指の先</option></select></div>
   <div class="row"><span>AIの補正量</span><input id="aiamt" type="range" min="10" max="100" value="60"><output id="aiamtv">60</output></div>
+  <div id="handpick" hidden><p class="note" id="hpmsg"></p><div class="btns" id="handbtns" style="margin:6px 0 0"></div></div>
   <p class="note" id="aimsg">「補正する場所」が親指の付け根のとき、下で「へこませる」を選ぶと付け根が細くなり、「ふくらませる」を選ぶと太くなります。押すたびに重ねて補正されます。初回は、AIの準備に少し時間がかかります。</p>
 </div>
 <div class="panel">
@@ -66,10 +119,155 @@ label.chk{display:flex;gap:8px;align-items:center;padding:6px 0;color:var(--sub)
   <p class="note">拡大:2本の指で広げる・つまむと拡大・縮小、2本の指で動かすと移動します。1本の指では範囲を指定します。</p>
 </div>
 </main>
+<div id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="gtitle">
+<div class="gwrap">
+  <div class="ghead"><h2 id="gtitle">🌸 使い方ガイド</h2><button class="btn sub" id="gclose" type="button">閉じる</button></div>
+  <p class="gintro">知りたい項目をタップすると、説明が開きます。</p>
+
+  <details class="g" open><summary><span aria-hidden="true">🧭</span>はじめての流れ(STEP 1〜5)</summary><div class="gbody">
+    <div class="step"><span class="num">STEP 1</span><div><b>写真を選ぶ</b>「写真を選ぶ」ボタンを押して、補正したい写真を1枚選びます。写真が画面に表示されたら、準備完了です。</div></div>
+    <div class="step"><span class="num">STEP 2</span><div><b>自動補正か手動補正を選ぶ</b>おまかせなら、「AIで親指を探して補正」ボタンを押します。自分で場所を決めたいなら、下の「補正のしかた」でモードを選び、写真を指でなぞります。</div></div>
+    <div class="step"><span class="num">STEP 3</span><div><b>補正の強さを調整する</b>「補正の強さ」や「AIの補正量」のスライダーを動かして、自然に見える強さにします。迷ったら、弱めから始めましょう。</div></div>
+    <div class="step"><span class="num">STEP 4</span><div><b>補正前と補正後を比べる</b>「補正前と比較」のスライダーを右へ動かすと、画面の左側が元の写真になります。</div></div>
+    <div class="step"><span class="num">STEP 5</span><div><b>写真を保存する</b>「写真を保存」ボタンを押します。写真が大きく表示されるので、長押しして「“写真”に追加」を選びます。</div></div>
+    <p>操作を間違えたら、いつでも「一つ戻る」ボタンで戻せます。</p>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">📷</span>写真の読み込み</summary><div class="gbody">
+    <h3>どこから選ぶ?</h3>
+    <p>「写真を選ぶ」ボタンを押すと、端末の写真選択の画面が開きます(「フォトライブラリ」「写真を撮る」「ファイルを選択」など)。補正したい写真を1枚選んでください。</p>
+    <h3>読み込めるとどうなる?</h3>
+    <ul>
+      <li>写真が、画面の上の枠の中に表示されます。これで補正できる状態です。</li>
+      <li>写真が大きい場合は、処理を軽くするために、長い辺が最大1000ピクセルに小さくされます。</li>
+      <li>別の写真を選び直すと、それまでの補正と「一つ戻る」の記録は消えます。</li>
+      <li>読み込めない時は、「この写真は読み込めませんでした」と表示されます。別の写真で試してください。</li>
+    </ul>
+    <div class="term">📘 ピクセル:写真を作っている、とても小さな点のことです。</div>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">🤖</span>AIによる自動補正</summary><div class="gbody">
+    <p>AI(人工知能)が、写真の中の<b>手</b>を探して、<b>親指の位置</b>を見つける機能です。見つけた場所を、自動で補正します。</p>
+    <div class="flow"><span class="chip">📷 写真</span>→<span class="chip">🤖 AIが手を探す</span>→<span class="chip">🎯 親指の場所を補正</span></div>
+    <div class="term">📘 AI:たくさんの写真を学習して、写真の中のものを見分けられるコンピューターの仕組みです。</div>
+    <h3>補正する場所の選び方</h3>
+    <p>「補正する場所」のメニューから選びます。</p>
+    <ul>
+      <li><b>親指の付け根</b>(最初の設定):手のひら側の、親指のふくらんだ部分です。</li>
+      <li><b>親指の先</b>:親指の先っぽの部分です。</li>
+    </ul>
+    <h3>自動補正の手順</h3>
+    <ol>
+      <li>「写真を選ぶ」で、手が写った写真を選ぶ</li>
+      <li>「補正する場所」を選ぶ</li>
+      <li>下の「補正のしかた」でモードを選ぶ<br>・付け根を<b>細く</b>したい →「へこませる」<br>・付け根を<b>太く</b>したい →「ふくらませる」<br>・なめらかにしたい →「なめらかにする」<br>(「ずらす」は、自動補正では使えません)</li>
+      <li>「AIの補正量」を決める(最初は60)</li>
+      <li>「AIで親指を探して補正」ボタンを押す</li>
+    </ol>
+    <p>手が見つかると、手の上に黄色と白の点が出て、<b>赤い輪</b>の場所が補正されます。足りない時は、もう一度押すと、重ねて補正されます。</p>
+    <h3>手が2つ以上写っている時</h3>
+    <p>写真の手の上に、<b>1、2…の番号</b>(左の手から順番)が出ます。AIのパネルの「手1を補正」「手2を補正」などのボタンから、補正したい手を選びます。</p>
+    <h3>知っておくこと</h3>
+    <ul>
+      <li>最初に使う時は、AIの準備に少し時間がかかります。インターネットにつながっている必要があります。</li>
+      <li>写真そのものは、どこにも送られません。</li>
+      <li>「手が見つかりませんでした」と出たら、手が大きく写った写真で試してください。</li>
+      <li>ずれた時は、「一つ戻る」を押して、場所やモードを変えて試せます。</li>
+    </ul>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">✋</span>手動補正(自分で場所を選ぶ)</summary><div class="gbody">
+    <h3>場所の選び方</h3>
+    <ol>
+      <li>下の「補正のしかた」で、モードを1つ選ぶ</li>
+      <li>写真の上を、<b>指1本</b>でなぞる、または押さえる</li>
+      <li>「ブラシの大きさ」で、一度に補正する範囲の大きさを変えられる</li>
+    </ol>
+    <div class="term">📘 ブラシ:指でなぞった時に、補正が効く丸い範囲のことです。数字が大きいほど、広い範囲になります。</div>
+    <h3>細かく選びたい時(拡大)</h3>
+    <p>2本の指を広げると拡大、つまむと縮小します。2本の指で動かすと、写真の見える位置が動きます。「拡大」「縮小」「全体」のボタンでも操作できます。拡大すると、ブラシと補正の効き方は自動で小さくなります。</p>
+    <h3>4つのモードの違い</h3>
+    <div class="mode"><b>✨ なめらかにする</b><br>指で<b>なぞる</b>と、その部分の細かいデコボコや色むらをぼかします。<br>使う時:肌のざらつきを目立たなくしたい時。<br>なぞった範囲は、色で表示されます(「なめらかにした範囲を色で表示する」のチェックで切り替え)。</div>
+    <div class="mode"><b>➡️ ずらす</b><br>指で<b>なぞった方向</b>へ、写真の形を少しずつ動かします。<br>使う時:輪郭を、少しだけ動かしたい時。</div>
+    <div class="mode"><b>🎈 ふくらませる</b><br>指を<b>置いたまま</b>にすると、その場所が中心から外へふくらみます。<br>使う時:へこんだ所を戻したい、少し大きく見せたい時。</div>
+    <div class="mode"><b>🤏 へこませる</b><br>指を<b>置いたまま</b>にすると、その場所が中心へ引きしまります。<br>使う時:少し細く見せたい時。</div>
+    <p>強くかけすぎると不自然になります。少しずつ試しましょう。</p>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">🎚️</span>補正の強さ</summary><div class="gbody">
+    <h3>「補正の強さ」</h3>
+    <p>補正全体の<b>効きの強さ</b>です(最初は80)。形を変える補正(ずらす・ふくらませる・へこませる)も、なめらかにする補正も、まとめて強くしたり弱くしたりできます。補正したあとからでも動かせます。</p>
+    <h3>「AIの補正量」</h3>
+    <p>自動補正で、「補正する場所」が親指の付け根で、モードが「へこませる」または「ふくらませる」の時に、<b>ボタンを押した1回分の大きさ</b>を決めます(最初は60)。押したあとには変えられません。変えたい時は、「一つ戻る」を押してから、数字を変えて、もう一度押します。</p>
+    <h3>2つの違い</h3>
+    <ul>
+      <li><b>補正の強さ</b>:全体の音量つまみ。あとから動かせる。</li>
+      <li><b>AIの補正量</b>:自動補正を押す時の、1回分の大きさ。</li>
+    </ul>
+    <p>どちらも、数字を大きくすると強くなります。「ブラシの大きさ」は、手動補正の範囲のほか、自動補正で「親指の先」を選んだ時や、「なめらかにする」を選んだ時の範囲にも使われます。</p>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">↩️</span>元に戻す・やり直す</summary><div class="gbody">
+    <ul>
+      <li><b>一つ戻る</b>:直前の操作を取り消します(指で1回なぞる、AIで1回補正する、など)。最大20回前まで戻れます。</li>
+      <li><b>一つ進む</b>:戻しすぎた時に、取り消した操作をもう一度行います。</li>
+      <li><b>すべてやり直す</b>:補正を全部消して、元の写真に戻します。押したあとでも、「一つ戻る」で取り消せます。</li>
+    </ul>
+    <p>戻ったあとに新しく操作すると、「一つ進む」は使えなくなります。使えない時は、ボタンが薄くなっています。</p>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">🔍</span>補正前・補正後の比較</summary><div class="gbody">
+    <p>「補正前と比較」のスライダーを、右へ動かします。画面の<b>左側が補正前</b>の写真になり、白い線が境目です。0に戻すと、全体が補正後です。</p>
+    <svg viewBox="0 0 300 120" width="100%" style="max-width:360px;display:block;margin:8px auto" role="img" aria-label="スライダーを右に動かすと、左側が補正前になる図">
+      <rect x="4" y="4" width="292" height="72" rx="8" style="fill:var(--soft);stroke:var(--line)"/>
+      <rect x="4" y="4" width="124" height="72" rx="8" style="fill:var(--accent);opacity:.25"/>
+      <line x1="128" y1="4" x2="128" y2="76" stroke="#fff" stroke-width="4"/>
+      <text x="66" y="46" text-anchor="middle" font-size="16" style="fill:var(--ink)">補正前</text>
+      <text x="212" y="46" text-anchor="middle" font-size="16" style="fill:var(--ink)">補正後</text>
+      <rect x="20" y="96" width="260" height="6" rx="3" style="fill:var(--line)"/>
+      <circle cx="90" cy="99" r="11" style="fill:var(--accent)"/>
+      <text x="150" y="118" text-anchor="middle" font-size="13" style="fill:var(--sub)">「補正前と比較」を右へ</text>
+    </svg>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">💾</span>保存</summary><div class="gbody">
+    <h3>保存のしかた</h3>
+    <ol>
+      <li>「写真を保存」ボタンを押す</li>
+      <li>補正後の写真が、大きく表示される</li>
+      <li>写真を<b>長押し</b>して、「“写真”に追加」を選ぶ</li>
+      <li>「閉じる」を押すと、編集画面に戻る</li>
+    </ol>
+    <p>お使いの環境によっては、保存の確認の画面が出ることもあります。</p>
+    <h3>保存した写真について</h3>
+    <ul>
+      <li>JPEG形式の写真です。</li>
+      <li>長い辺が最大1000ピクセルなので、元の写真より小さくなることがあります。</li>
+      <li>補正後の写真だけが保存されます。色の表示や、比較の白い線は入りません。</li>
+    </ul>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">🆘</span>困った時は</summary><div class="gbody">
+    <ul>
+      <li><b>「この写真は読み込めませんでした」</b>:別の写真を選んで、試してください。</li>
+      <li><b>「手が見つかりませんでした」</b>:手が大きく写った写真で、試してください。</li>
+      <li><b>「AIを使えませんでした」「外部のAI部品でエラー…」</b>:通信を確かめて、もう一度試してください。AIが使えなくても、手動補正は使えます。</li>
+      <li><b>変になってしまった</b>:「一つ戻る」か、「すべてやり直す」を押してください。</li>
+    </ul>
+  </div></details>
+
+  <div class="gfoot">
+    <label class="chk" style="color:var(--ink)"><input id="skipStart2" type="checkbox">次回からは編集画面を直接開く</label>
+    <div class="btns"><button class="btn sub" id="toStart" type="button">スタート画面を開く</button><button class="btn" id="gclose2" type="button">閉じて補正にもどる</button></div>
+  </div>
+</div>
+</div>
 <div id="ov" hidden><img id="ovimg" alt="補正後の写真" style="max-width:100%;max-height:68vh"><p>写真を長押しして「“写真”に追加」を選ぶと保存できます。</p><button class="btn" id="ovx" type="button" onclick="document.getElementById('ov').hidden=true">閉じる</button></div>
 <script>
 const $=id=>document.getElementById(id);
-addEventListener('error',e=>{const m=$('smsg');if(m)m.textContent='エラー: '+e.message});
+addEventListener('error',e=>{const m=$('smsg');if(!m)return;
+  m.textContent=(e.message==='Script error.')?'外部のAI部品でエラーが起きました。AI以外の機能は使えます。iOSやSafariが古い場合や、通信が不安定な場合に起こることがあります。':'エラー: '+e.message});
+addEventListener('unhandledrejection',e=>{const m=$('smsg');if(m)m.textContent='エラー: '+((e.reason&&e.reason.message)||e.reason)});
 const view=$('view'),vctx=view.getContext('2d');
 const mk=()=>document.createElement('canvas');
 const orig=mk(),wc=mk(),blur=mk(),mask=mk(),res=mk(),layer=mk(),tint=mk();
@@ -94,7 +292,7 @@ function start(src){
   orig.getContext('2d').drawImage(src,0,0,W,H);
   srcData=orig.getContext('2d').getImageData(0,0,W,H).data;
   DX=new Float32Array(W*H);DY=new Float32Array(W*H);
-  has=true;wDirty=true;full=true;hist.u=[];hist.r=[];pre=null;sb=null;aiPts=null;upd();
+  has=true;wDirty=true;full=true;hist.u=[];hist.r=[];pre=null;sb=null;aiPts=null;aiHands=null;$('handpick').hidden=true;upd();
   $('hint').hidden=true;$('vp').hidden=false;fit();schedule();
 }
 async function loadFile(f){
@@ -235,7 +433,8 @@ view.addEventListener('pointermove',e=>{
 
 let Z=1,TX=0,TY=0,FW=0,FH=0,dl=null;
 function fit(){
-  const aw=$('vp').parentElement.clientWidth-16,mh=innerHeight*.58,f=Math.min(1,aw/W,mh/H);
+  const pw=$('vp').parentElement.clientWidth;if(pw<=0)return;
+  const aw=pw-16,mh=innerHeight*.58,f=Math.min(1,aw/W,mh/H);
   FW=Math.round(W*f);FH=Math.round(H*f);
   view.style.width=FW+'px';view.style.height=FH+'px';
   $('vp').style.width=FW+'px';$('vp').style.height=FH+'px';
@@ -283,19 +482,54 @@ async function getHL(){
   aiStage='AIモデルの読み込み';
   hl=await m.HandLandmarker.createFromOptions(fs,{
     baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'CPU'},
-    runningMode:'IMAGE',numHands:2,minHandDetectionConfidence:.3,minHandPresenceConfidence:.3});
+    runningMode:'IMAGE',numHands:4,minHandDetectionConfidence:.3,minHandPresenceConfidence:.3});
   return hl;
 }
 function drawAi(){
-  const f=FW/W,r=7/(f*Z);
+  const f=FW/W,r=7/(f*Z),multi=aiPts.hands.length>1,sel=aiPts.sel;
   vctx.save();
-  aiPts.hands.forEach(h=>h.forEach((p,i)=>{
-    const th=i>=1&&i<=4;
-    vctx.beginPath();vctx.arc(p.x,p.y,r*(th?1:.55),0,7);
-    vctx.fillStyle=th?'#ffd23f':'rgba(255,255,255,.85)';vctx.fill();
-  }));
+  aiPts.hands.forEach((h,hi)=>{
+    const on=!multi||hi===sel;
+    h.forEach((p,i)=>{
+      const th=i>=1&&i<=4;
+      vctx.beginPath();vctx.arc(p.x,p.y,r*(th?1:.55),0,7);
+      vctx.fillStyle=on?(th?'#ffd23f':'rgba(255,255,255,.85)'):'rgba(255,255,255,.45)';vctx.fill();
+    });
+    if(multi){
+      const c=h[9],br=r*2.2;
+      vctx.beginPath();vctx.arc(c.x,c.y,br,0,7);vctx.fillStyle=hi===sel?'#ff4d6d':'#8a5a6b';vctx.fill();
+      vctx.lineWidth=br/8;vctx.strokeStyle='#fff';vctx.stroke();
+      vctx.fillStyle='#fff';vctx.font='bold '+(br*1.3)+'px sans-serif';vctx.textAlign='center';vctx.textBaseline='middle';
+      vctx.fillText(String(hi+1),c.x,c.y+br*.05);
+    }
+  });
   if(aiPts.t){vctx.strokeStyle='#ff4d6d';vctx.lineWidth=r/2.5;vctx.beginPath();vctx.arc(aiPts.t.x,aiPts.t.y,r*2.4,0,7);vctx.stroke()}
   vctx.restore();
+}
+// 見つかった手のうち、指定した1つを補正する
+let aiHands=null;
+function applyHand(idx){
+  const L=aiHands[idx],tg=$('aitgt').value;
+  const t=tg==='tip'?L[4]:{x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
+  aiPts={hands:aiHands,t,sel:idx};
+  applyAt(t,L,tg);schedule();
+}
+// 手が2つ以上のとき、補正する手を選ぶボタンを作る
+function showPick(){
+  const box=$('handbtns');box.textContent='';
+  aiHands.forEach((h,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='btn sub';b.textContent='手'+(i+1)+'を補正';
+    b.onclick=()=>{
+      if(mode==='push'){$('aimsg').textContent='「ずらす」は自動では使えません。ほかのモードを選んでください。';return}
+      applyHand(i);
+      $('aimsg').textContent='手'+(i+1)+'の赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、別の手や場所で試してください。';
+    };
+    box.appendChild(b);
+  });
+  $('hpmsg').textContent='手が'+aiHands.length+'つ見つかりました。写真の番号を見て、補正する手のボタンを押してください。';
+  $('handpick').hidden=false;
+  aiPts={hands:aiHands,t:null,sel:-1};
+  $('aimsg').textContent='手が'+aiHands.length+'つ見つかりました。補正する手を選んでください。';
 }
 // 親指の付け根を、親指の軸に向かって細く(または太く)する
 function slim(L,sign){
@@ -337,12 +571,15 @@ $('ai').onclick=async()=>{
     aiStage='手の検出';const res=h.detect(orig);
     const hands=(res.landmarks||[]).map(l=>l.map(p=>({x:p.x*W,y:p.y*H})));
     if(!hands.length){aiPts=null;say('手が見つかりませんでした。手が大きく写っている写真で試してください。');return}
-    const L=hands[0];
-    const tg=$('aitgt').value;
-    const t=tg==='tip'?L[4]:{x:(L[1].x+L[2].x)/2,y:(L[1].y+L[2].y)/2};
-    aiPts={hands,t};
-    applyAt(t,L,tg);
-    say('手を'+hands.length+'つ見つけて、赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、補正する場所を変えて試してください。');
+    hands.sort((p,q)=>p[9].x-q[9].x);
+    aiHands=hands;
+    if(hands.length===1){
+      $('handpick').hidden=true;
+      applyHand(0);
+      say('手を1つ見つけて、赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、補正する場所を変えて試してください。');
+    }else{
+      showPick();
+    }
   }catch(e){
     say('AIを使えませんでした。['+aiStage+'] '+((e&&e.message)?e.message:String(e)));
   }finally{$('ai').disabled=false;schedule()}
@@ -378,5 +615,33 @@ function render(){
 });
 $('show').addEventListener('change',schedule);
 $('clear').addEventListener('click',()=>{if(!has)return;push(snapAll(),{x0:0,y0:0,x1:W,y1:H});mask.getContext('2d').clearRect(0,0,W,H);DX.fill(0);DY.fill(0);aiPts=null;wDirty=true;full=true;schedule()});
+</script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const KEY='retouch_skip_start';
+  function getSkip(){try{return localStorage.getItem(KEY)==='1'}catch(e){return false}}
+  function setSkip(v){try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}}
+  function showEditor(){
+    $('start').hidden=true;$('editor').hidden=false;scrollTo(0,0);
+    dispatchEvent(new Event('resize'));
+  }
+  function showStart(){$('editor').hidden=true;$('start').hidden=false;scrollTo(0,0)}
+  function openGuide(){$('guide').hidden=false;$('guide').scrollTop=0;document.body.style.overflow='hidden';$('gclose').focus()}
+  function closeGuide(){$('guide').hidden=true;document.body.style.overflow=''}
+  function syncSkip(v){$('skipStart').checked=v;$('skipStart2').checked=v;setSkip(v)}
+  $('goEdit').addEventListener('click',showEditor);
+  $('goGuide').addEventListener('click',openGuide);
+  $('helpBtn').addEventListener('click',openGuide);
+  $('gclose').addEventListener('click',closeGuide);
+  $('gclose2').addEventListener('click',()=>{closeGuide();if(!$('start').hidden)showEditor()});
+  $('toStart').addEventListener('click',()=>{closeGuide();showStart()});
+  $('skipStart').addEventListener('change',e=>syncSkip(e.target.checked));
+  $('skipStart2').addEventListener('change',e=>syncSkip(e.target.checked));
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('guide').hidden)closeGuide()});
+  const skip=getSkip();
+  $('skipStart').checked=skip;$('skipStart2').checked=skip;
+  if(skip)showEditor();
+})();
 </script>
 </body></html>
