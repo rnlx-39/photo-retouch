@@ -77,6 +77,11 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
 .quick .btn{padding:9px 10px;font-size:.95rem}
 @media (max-width:520px){.quick{gap:5px}.quick output{display:none}.quick .btn{padding:9px 9px}}
 .quick output{color:var(--sub);margin-left:auto;font-variant-numeric:tabular-nums}
+.autobox{background:var(--soft);border:2px solid var(--accent);border-radius:16px;padding:12px}
+.autolabel{font-size:.9rem;font-weight:700;color:var(--accent);margin:0 0 6px}
+.sep{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:.9rem;margin:16px 0 10px}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.autobox .btn{width:100%}
 .ptitle{margin:0 0 8px;font-size:1.02rem;color:var(--accent)}
 @media (min-width:700px){
   #editor{max-width:1100px}
@@ -112,6 +117,13 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
 </div>
 </div>
 <div class="ctlcol">
+<section class="autobox" aria-label="ワンタップ自動補正">
+  <div class="autolabel">おまかせ(押すだけ)</div>
+  <button class="btn big" id="auto" type="button">ワンタップ自動補正</button>
+  <input id="fileAuto" type="file" accept="image/*" hidden>
+  <p class="note" id="automsg">このボタンを押すだけで、写真を選ぶところから補正まで終わります(すでに写真を選んでいる時は、その写真を補正します)。親指の付け根から手首につながる輪郭を、自然に整えます。</p>
+</section>
+<p class="sep"><span>ここから下は、自分で調整したい時の機能です</span></p>
 <div class="btns" style="margin-top:0">
   <label class="btn" for="file">写真を選ぶ</label>
   <input id="file" type="file" accept="image/*" hidden>
@@ -148,11 +160,42 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
 
   <details class="g" open><summary><span aria-hidden="true">🧭</span>はじめての流れ(STEP 1〜5)</summary><div class="gbody">
     <div class="step"><span class="num">STEP 1</span><div><b>写真を選ぶ</b>「写真を選ぶ」ボタンを押して、補正したい写真を1枚選びます。写真が画面に表示されたら、準備完了です。</div></div>
-    <div class="step"><span class="num">STEP 2</span><div><b>自動補正か手動補正を選ぶ</b>おまかせなら、「AIで親指を探して補正」ボタンを押します。自分で場所を決めたいなら、「補正のしかた」でモードを選び、写真を指でなぞります。</div></div>
+    <div class="step"><span class="num">STEP 2</span><div><b>自動補正か手動補正を選ぶ</b>おまかせなら、「ワンタップ自動補正」ボタンを押すだけです。自分で場所や強さを決めたいなら、「AIでおまかせ補正」や「補正のしかた」を使います。</div></div>
     <div class="step"><span class="num">STEP 3</span><div><b>補正の強さを調整する</b>「補正の強さ」や「AIの補正量」のスライダーを動かして、自然に見える強さにします。迷ったら、弱めから始めましょう。</div></div>
     <div class="step"><span class="num">STEP 4</span><div><b>補正前と補正後を比べる</b>「補正前と比較」のスライダーを右へ動かすと、画面の左側が元の写真になります。</div></div>
     <div class="step"><span class="num">STEP 5</span><div><b>写真を保存する</b>「写真を保存」ボタンを押します。写真が大きく表示されるので、長押しして「“写真”に追加」を選びます。</div></div>
     <p>操作を間違えたら、いつでも「一つ戻る」ボタンで戻せます。</p>
+  </div></details>
+
+  <details class="g"><summary><span aria-hidden="true">⚡</span>「ワンタップ自動補正」ボタン</summary><div class="gbody">
+    <p>このボタンを押すだけで、<b>親指の付け根から手首につながる輪郭</b>を、自然に整える機能です。ほかのボタンを押したり、補正する場所や量を選んだりする必要はありません。写真がまだ選ばれていない時は、ボタンを押すと写真選びから始まり、選ぶとそのまま補正します。</p>
+    <div class="flow"><span class="chip">📷 写真を選ぶ</span>→<span class="chip">⚡ 「ワンタップ自動補正」を押す</span>→<span class="chip">✨ 補正後の写真が出る</span></div>
+    <h3>使い方</h3>
+    <ol>
+      <li>「写真を選ぶ」で、手が写った写真を選ぶ</li>
+      <li>「ワンタップ自動補正」ボタンを押す</li>
+      <li>写真の選択画面が開くので、手が写った写真を選ぶ(すでに写真を選んでいる時は、この手順はありません)</li>
+      <li>ボタンが「補正中…」に変わります</li>
+      <li>終わると、補正後の写真がすぐに表示されます</li>
+      <li>「補正前と比較」のスライダーで、元の写真と見比べる</li>
+      <li>気に入らなければ「一つ戻る」を押す</li>
+    </ol>
+    <h3>何をしているの?</h3>
+    <ul>
+      <li>AIが写真の中の手を探し、親指の位置を見つけます。</li>
+      <li>親指の付け根のふくらみを、親指の向きに沿って、少しだけ手の中心側へ引き戻します。そこから手首に向かって、だんだん弱くなるようにして、輪郭がなめらかにつながるようにしています。</li>
+      <li>手の肌の色を調べて、<b>手の部分だけ</b>を動かします。ぬいぐるみや背景は、ほとんど変わりません。</li>
+      <li>写真全体の拡大・縮小や、切り取りはしません。</li>
+    </ul>
+    <h3>手が2つ以上写っている時</h3>
+    <p>見つかったすべての手を補正します。片方の手だけにしたい時は、「一つ戻る」を押してから、「AIでおまかせ補正」で手を選んでください。</p>
+    <h3>うまくいかない時</h3>
+    <ul>
+      <li><b>「手が見つかりませんでした」</b>:手が大きく写った、明るい写真で試してください。</li>
+      <li><b>「肌の色をうまく判別できませんでした」</b>:明るい場所で撮った写真や、手の色がはっきり写った写真で試してください。</li>
+      <li><b>「AIを読み込めませんでした」</b>:ボタンが「もう一度試す」に変わります。通信を確かめて、もう一度押してください。</li>
+    </ul>
+    <p>「補正の強さ」のスライダーで、効きの強さも変えられます(30より低い時は、押した時に80に戻ります)。「ワンタップ自動補正」を押すたびに、重ねて補正されます。</p>
   </div></details>
 
   <details class="g"><summary><span aria-hidden="true">📷</span>写真の読み込み</summary><div class="gbody">
@@ -168,21 +211,21 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
     <div class="term">📘 ピクセル:写真を作っている、とても小さな点のことです。</div>
   </div></details>
 
-  <details class="g"><summary><span aria-hidden="true">🤖</span>AIによる自動補正</summary><div class="gbody">
+  <details class="g"><summary><span aria-hidden="true">🤖</span>AIでおまかせ補正(場所や量を選ぶ)</summary><div class="gbody">
     <p>AI(人工知能)が、写真の中の<b>手</b>を探して、<b>親指の位置</b>を見つける機能です。見つけた場所を、自動で補正します。</p>
     <div class="flow"><span class="chip">📷 写真</span>→<span class="chip">🤖 AIが手を探す</span>→<span class="chip">🎯 親指の場所を補正</span></div>
     <div class="term">📘 AI:たくさんの写真を学習して、写真の中のものを見分けられるコンピューターの仕組みです。</div>
     <h3>補正する場所の選び方</h3>
-    <p>「補正する場所」のメニューから選びます。</p>
+    <p>「ワンタップ自動補正」ボタンとは別に、場所や強さを自分で選びたい時の機能です。「補正する場所」のメニューから選びます。</p>
     <ul>
       <li><b>親指の付け根</b>(最初の設定):手のひら側の、親指のふくらんだ部分です。</li>
       <li><b>親指の先</b>:親指の先っぽの部分です。</li>
     </ul>
-    <h3>自動補正の手順</h3>
+    <h3>AIでおまかせ補正の手順</h3>
     <ol>
       <li>「写真を選ぶ」で、手が写った写真を選ぶ</li>
       <li>「補正する場所」を選ぶ</li>
-      <li>「補正のしかた」でモードを選ぶ<br>・付け根を<b>細く</b>したい →「へこませる」<br>・付け根を<b>太く</b>したい →「ふくらませる」<br>・なめらかにしたい →「なめらかにする」<br>(「ずらす」は、自動補正では使えません)</li>
+      <li>「補正のしかた」でモードを選ぶ<br>・付け根を<b>細く</b>したい →「へこませる」<br>・付け根を<b>太く</b>したい →「ふくらませる」<br>・なめらかにしたい →「なめらかにする」<br>(「ずらす」は、AIでおまかせ補正では使えません)</li>
       <li>「AIの補正量」を決める(最初は60)</li>
       <li>「AIで親指を探して補正」ボタンを押す</li>
     </ol>
@@ -220,13 +263,13 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
     <h3>「補正の強さ」</h3>
     <p>補正全体の<b>効きの強さ</b>です(最初は80)。形を変える補正(ずらす・ふくらませる・へこませる)も、なめらかにする補正も、まとめて強くしたり弱くしたりできます。補正したあとからでも動かせます。</p>
     <h3>「AIの補正量」</h3>
-    <p>自動補正で、「補正する場所」が親指の付け根で、モードが「へこませる」または「ふくらませる」の時に、<b>ボタンを押した1回分の大きさ</b>を決めます(最初は60)。押したあとには変えられません。変えたい時は、「一つ戻る」を押してから、数字を変えて、もう一度押します。</p>
+    <p>「AIでおまかせ補正」で、「補正する場所」が親指の付け根で、モードが「へこませる」または「ふくらませる」の時に、<b>ボタンを押した1回分の大きさ</b>を決めます(最初は60)。押したあとには変えられません。変えたい時は、「一つ戻る」を押してから、数字を変えて、もう一度押します。</p>
     <h3>2つの違い</h3>
     <ul>
       <li><b>補正の強さ</b>:全体の音量つまみ。あとから動かせる。</li>
-      <li><b>AIの補正量</b>:自動補正を押す時の、1回分の大きさ。</li>
+      <li><b>AIの補正量</b>:「AIで親指を探して補正」を押す時の、1回分の大きさ。</li>
     </ul>
-    <p>どちらも、数字を大きくすると強くなります。「ブラシの大きさ」は、手動補正の範囲のほか、自動補正で「親指の先」を選んだ時や、「なめらかにする」を選んだ時の範囲にも使われます。</p>
+    <p>どちらも、数字を大きくすると強くなります。「ブラシの大きさ」は、手動補正の範囲のほか、「AIでおまかせ補正」で「親指の先」を選んだ時や、「なめらかにする」を選んだ時の範囲にも使われます。</p>
   </div></details>
 
   <details class="g"><summary><span aria-hidden="true">↩️</span>元に戻す・やり直す</summary><div class="gbody">
@@ -274,6 +317,7 @@ details.g>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2
       <li><b>「この写真は読み込めませんでした」</b>:別の写真を選んで、試してください。</li>
       <li><b>「手が見つかりませんでした」</b>:手が大きく写った写真で、試してください。</li>
       <li><b>「AIを使えませんでした」「外部のAI部品でエラー…」</b>:通信を確かめて、もう一度試してください。AIが使えなくても、手動補正は使えます。</li>
+      <li><b>「手の輪郭を判別できませんでした」「親指がはっきり写っていない」</b>:親指の付け根から手首までが大きく写った写真で、試してください。</li>
       <li><b>変になってしまった</b>:「一つ戻る」か、「すべてやり直す」を押してください。</li>
     </ul>
   </div></details>
@@ -321,17 +365,18 @@ async function loadFile(f){
   const info=(f.type||'種類不明')+', '+Math.round(f.size/1024)+'KB';
   const fail=m=>{$('hint').hidden=false;$('hint').textContent='この写真は読み込めませんでした('+info+')。'+m};
   let buf;
-  try{buf=await f.arrayBuffer()}catch(err){fail('ファイルを読み取れませんでした。');return}
-  if(!buf.byteLength){fail('ファイルが空です。写真アプリで一度開いてから、もう一度選んでください。');return}
+  try{buf=await f.arrayBuffer()}catch(err){fail('ファイルを読み取れませんでした。');return false}
+  if(!buf.byteLength){fail('ファイルが空です。写真アプリで一度開いてから、もう一度選んでください。');return false}
   const blob=new Blob([buf],{type:f.type||'image/jpeg'});
   let src=null;
   try{
     src=await new Promise((ok,ng)=>{const im=new Image(),u=URL.createObjectURL(blob);
       im.onload=()=>{URL.revokeObjectURL(u);ok(im)};im.onerror=()=>ng(new Error('img'));im.src=u});
   }catch(e1){
-    try{src=await createImageBitmap(blob)}catch(e2){fail('この形式は開けない可能性があります。');return}
+    try{src=await createImageBitmap(blob)}catch(e2){fail('この形式は開けない可能性があります。');return false}
   }
-  try{start(src)}catch(e3){fail('処理中にエラーが起きました:'+e3.message)}
+  try{start(src)}catch(e3){fail('処理中にエラーが起きました:'+e3.message);return false}
+  return true;
 }
 $('file').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;
@@ -492,12 +537,12 @@ $('save').onclick=async()=>{
 };
 let aiPts=null,hl=null;
 const MPV='0.10.14',MPC='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MPV;
-let aiStage='';
+let aiStage='',aiTry=0;
 async function getHL(){
   if(hl)return hl;
   aiStage='ライブラリの読み込み';
   let m;
-  try{m=await import(MPC+'/vision_bundle.mjs')}
+  try{m=await import(MPC+'/vision_bundle.mjs'+(aiTry?'?r='+aiTry:''))}
   catch(e0){m=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MPV+'/+esm')}
   aiStage='AIの準備';
   const fs=await m.FilesetResolver.forVisionTasks(MPC+'/wasm');
@@ -542,7 +587,7 @@ function showPick(){
   aiHands.forEach((h,i)=>{
     const b=document.createElement('button');b.type='button';b.className='btn sub';b.textContent='手'+(i+1)+'を補正';
     b.onclick=()=>{
-      if(mode==='push'){$('aimsg').textContent='「ずらす」は自動では使えません。ほかのモードを選んでください。';return}
+      if(mode==='push'){$('aimsg').textContent='「ずらす」は、AIでおまかせ補正では使えません。ほかのモードを選んでください。';return}
       applyHand(i);
       $('aimsg').textContent='手'+(i+1)+'の赤い輪の場所を補正しました。ずれていたら「一つ戻る」を押して、別の手や場所で試してください。';
     };
@@ -584,7 +629,7 @@ function applyAt(t,L,tg){
 $('ai').onclick=async()=>{
   const say=t=>{$('aimsg').textContent=t};
   if(!has){say('先に写真を選んでください。');return}
-  if(mode==='push'){say('「ずらす」は自動では使えません。ほかのモードを選んでください。');return}
+  if(mode==='push'){say('「ずらす」は、AIでおまかせ補正では使えません。ほかのモードを選んでください。');return}
   $('ai').disabled=true;
   try{
     say('AIを準備しています。初回は少し時間がかかります…');
@@ -606,6 +651,165 @@ $('ai').onclick=async()=>{
     say('AIを使えませんでした。['+aiStage+'] '+((e&&e.message)?e.message:String(e)));
   }finally{$('ai').disabled=false;schedule()}
 };
+
+// ===== ワンタップ自動補正 =====
+// 参考画像を比べると、変わっていたのは「親指の付け根のふくらみ」と「手首へつながる輪郭」だけでした。
+// そこで、この部分の皮ふを、親指が向いている方向に沿って、手の中心側へ少しだけ引き戻します。
+function patchRGB(x,y,r){
+  let R=0,G=0,B=0,n=0;
+  for(let yy=Math.max(0,Math.round(y)-r);yy<=Math.min(H-1,Math.round(y)+r);yy++)
+    for(let xx=Math.max(0,Math.round(x)-r);xx<=Math.min(W-1,Math.round(x)+r);xx++){
+      const i=(yy*W+xx)*4;R+=srcData[i];G+=srcData[i+1];B+=srcData[i+2];n++}
+  return n?[R/n,G/n,B/n]:null;
+}
+const toCbCr=c=>[128-.168736*c[0]-.331264*c[1]+.5*c[2],128+.5*c[0]-.418688*c[1]-.081312*c[2]];
+function boxBlur(a,w,h,r){
+  const t=new Float32Array(a.length);
+  for(let y=0;y<h;y++){let s=0,c=0;
+    for(let x=-r;x<w;x++){
+      if(x+r<w){s+=a[y*w+x+r];c++}
+      if(x-r-1>=0){s-=a[y*w+x-r-1];c--}
+      if(x>=0)t[y*w+x]=s/c;
+    }}
+  const o=new Float32Array(a.length);
+  for(let x=0;x<w;x++){let s=0,c=0;
+    for(let y=-r;y<h;y++){
+      if(y+r<h){s+=t[(y+r)*w+x];c++}
+      if(y-r-1>=0){s-=t[(y-r-1)*w+x];c--}
+      if(y>=0)o[y*w+x]=s/c;
+    }}
+  return o;
+}
+function autoHand(L){
+  const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  for(const k of [0,1,2,3,4]){const q=L[k];if(!(q.x>=0&&q.x<W&&q.y>=0&&q.y<H))return{ok:false,why:'out'}}
+  const Lt=d(L[1],L[2])+d(L[2],L[3])+d(L[3],L[4]);
+  if(!(Lt>W*.06))return{ok:false,why:'small'};
+  // v: 親指の先から根もとへ向かう向き(皮ふをこの向きへ引き戻す)
+  let vx=L[2].x-L[4].x,vy=L[2].y-L[4].y;const vl=Math.hypot(vx,vy)||1;vx/=vl;vy/=vl;
+  // u: 親指の根もとの骨の向き(L2からL1へ)
+  let ux=L[1].x-L[2].x,uy=L[1].y-L[2].y;const ul=Math.hypot(ux,uy)||1;ux/=ul;uy/=ul;
+  // n: 手のひら側(親指が曲がる側)。まっすぐな時は、手のひらの中心の側
+  let nx=-uy,ny=ux;
+  const d12x=(L[2].x-L[1].x)/(d(L[1],L[2])||1),d12y=(L[2].y-L[1].y)/(d(L[1],L[2])||1);
+  const d23x=(L[3].x-L[2].x)/(d(L[2],L[3])||1),d23y=(L[3].y-L[2].y)/(d(L[2],L[3])||1);
+  const fx=d23x-d12x,fy=d23y-d12y;
+  let sgn;
+  if(Math.hypot(fx,fy)>.12)sgn=(nx*fx+ny*fy)>=0?1:-1;
+  else{const pc={x:(L[5].x+L[9].x+L[13].x+L[17].x)/4,y:(L[5].y+L[9].y+L[13].y+L[17].y)/4};
+    sgn=(nx*(pc.x-L[2].x)+ny*(pc.y-L[2].y))>=0?1:-1}
+  nx*=sgn;ny*=sgn;
+  // c1: 付け根のふくらみの中心 / c2: 手首の近くの輪郭
+  const c1={x:L[2].x+ux*.09*Lt+nx*.15*Lt,y:L[2].y+uy*.09*Lt+ny*.15*Lt};
+  const c2={x:L[1].x+(L[0].x-L[1].x)*.7,y:L[1].y+(L[0].y-L[1].y)*.7};
+  const s1=.15*Lt,s2=.14*Lt,A=.035*Lt;
+  const R=2.4*Math.max(s1,s2);
+  const x0=Math.max(0,Math.floor(Math.min(c1.x,c2.x)-R)),x1=Math.min(W,Math.ceil(Math.max(c1.x,c2.x)+R));
+  const y0=Math.max(0,Math.floor(Math.min(c1.y,c2.y)-R)),y1=Math.min(H,Math.ceil(Math.max(c1.y,c2.y)+R));
+  if(x1-x0<8||y1-y0<8)return{ok:false,why:'out'};
+  // 皮ふの色を、手の上の点から調べる(手以外を動かさないため)
+  const pts=[L[0],mid(L[0],L[1]),L[1],mid(L[1],L[2]),L[2],mid(L[2],L[3])];
+  let cs=pts.map(q=>patchRGB(q.x,q.y,3)).filter(Boolean).map(toCbCr);
+  if(cs.length<3)return{ok:false,why:'color'};
+  const med=a=>{const b=[...a].sort((p,q)=>p-q);return b[b.length>>1]};
+  const mcb=med(cs.map(c=>c[0])),mcr=med(cs.map(c=>c[1]));
+  cs=cs.filter(c=>Math.hypot(c[0]-mcb,c[1]-mcr)<16);
+  if(cs.length<3)return{ok:false,why:'color'};
+  const ecb=cs.reduce((a,c)=>a+c[0],0)/cs.length,ecr=cs.reduce((a,c)=>a+c[1],0)/cs.length;
+  const sd=Math.sqrt(cs.reduce((a,c)=>a+(c[0]-ecb)**2+(c[1]-ecr)**2,0)/cs.length);
+  if(!(ecb>70&&ecb<130&&ecr>130&&ecr<180))return{ok:false,why:'color'};
+  const thr=Math.min(22,Math.max(12,2.5*sd+8));
+  const w=x1-x0,h=y1-y0;
+  let sk=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=((y+y0)*W+x+x0)*4,r=srcData[i],g=srcData[i+1],b=srcData[i+2];
+    const cb=128-.168736*r-.331264*g+.5*b,cr=128+.5*r-.418688*g-.081312*b,yy=.299*r+.587*g+.114*b;
+    const dd=Math.hypot(cb-ecb,cr-ecr);
+    let v=1-Math.min(1,Math.max(0,(dd-thr*.75)/(thr*.5)));
+    if(yy<30)v=0;
+    sk[y*w+x]=v;
+  }
+  sk=boxBlur(sk,w,h,Math.max(2,Math.round(.012*Lt)));
+  // 付け根の中心のまわりに、皮ふがどれだけあるか確かめる
+  let tot=0,cnt=0;const rr=.12*Lt;
+  for(let y=Math.max(0,Math.floor(c1.y-rr)-y0);y<Math.min(h,Math.ceil(c1.y+rr)-y0);y++)
+    for(let x=Math.max(0,Math.floor(c1.x-rr)-x0);x<Math.min(w,Math.ceil(c1.x+rr)-x0);x++){
+      if(Math.hypot(x+x0-c1.x,y+y0-c1.y)<=rr){tot+=sk[y*w+x];cnt++}}
+  if(!cnt||tot/cnt<.3)return{ok:false,why:'color'};
+  // 皮ふの部分だけを、v の向きへ引き戻す(付け根で最大、手首へ向かって弱くなる)
+  const sx=c2.x-c1.x,sy=c2.y-c1.y,sl2=sx*sx+sy*sy||1;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+    const k=sk[(y-y0)*w+(x-x0)];if(k<.02)continue;
+    let t=((x-c1.x)*sx+(y-c1.y)*sy)/sl2;t=Math.min(1,Math.max(0,t));
+    const dx=x-(c1.x+sx*t),dy=y-(c1.y+sy*t),sg=s1+(s2-s1)*t;
+    const G=(1-.6*t)*Math.exp(-.5*(dx*dx+dy*dy)/(sg*sg));
+    if(G<.01)continue;
+    const D=A*G*k,i=y*W+x;
+    DX[i]-=vx*D;DY[i]-=vy*D;
+  }
+  wDirty=true;rx0=Math.min(rx0,x0);ry0=Math.min(ry0,y0);rx1=Math.max(rx1,x1);ry1=Math.max(ry1,y1);
+  ext(x0,y0,x1,y1);
+  return{ok:true};
+}
+async function runAuto(){
+  const btn=$('auto'),msg=t=>{$('automsg').textContent=t};
+  if(!has)return;
+  let note='';
+  // 「補正の強さ」が低いままだと変化が見えないので、その時だけ80に戻す
+  if(+$('amt').value<30){$('amt').value=80;$('amtv').textContent='80';wDirty=true;full=true;note='(「補正の強さ」が低かったので、80に戻しました。)'}
+  btn.disabled=true;btn.textContent='補正中…';
+  msg('補正中…(はじめて使う時は、AIの準備に少し時間がかかります)');
+  await new Promise(r=>setTimeout(r,60));
+  let failed=false;
+  try{
+    const h=await getHL();
+    aiStage='手の検出';
+    const res=h.detect(orig);
+    const hands=(res.landmarks||[]).map(l=>l.map(p=>({x:p.x*W,y:p.y*H})));
+    if(!hands.length){
+      msg('手が見つかりませんでした。考えられる原因:手が小さい、暗い、ぼやけている、指が隠れている。対処:手が大きく写った、明るい写真で、もう一度試してください。');
+      return;
+    }
+    hands.sort((p,q)=>p[9].x-q[9].x);
+    pre=snapAll();sb=null;
+    let done=0;const why=new Set();
+    hands.forEach(L=>{const r=autoHand(L);if(r.ok)done++;else why.add(r.why)});
+    if(sb)push(pre,sb);
+    pre=null;sb=null;
+    if(!done){
+      msg(why.has('color')
+        ?'手は見つかりましたが、親指の付け根のまわりの肌の色をうまく判別できませんでした。対処:明るい場所で撮った写真や、手の色がはっきり写った写真で試してください。'
+        :'手は見つかりましたが、親指がはっきり写っていないため補正できませんでした。対処:親指の付け根から手首までが大きく写った写真で試してください。');
+      return;
+    }
+    aiPts=null;
+    $('cmp').value=0;$('cmpv').textContent='0';
+    schedule();
+    msg((hands.length>1?'手が'+hands.length+'つ見つかったので、'+done+'つを補正しました。':'補正が終わりました。')
+      +'「補正前と比較」のスライダーで見比べられます。気に入らなければ「一つ戻る」を押してください。'
+      +(hands.length>1?'片方の手だけを補正したい時は、「AIでおまかせ補正」から手を選べます。':'')+note
+      +'保存する時は、「写真を保存」を押してください。');
+  }catch(e){
+    failed=true;aiTry++;
+    msg('AIを読み込めませんでした。通信を確かめて、もう一度試してください。('+aiStage+')');
+  }finally{
+    btn.disabled=false;btn.textContent=failed?'もう一度試す':'ワンタップ自動補正';
+  }
+}
+// 写真がまだない時は、このボタンから写真選びを始めて、選んだらそのまま補正する
+$('auto').onclick=()=>{
+  if(!has){$('automsg').textContent='写真を選んでください。選ぶと、そのまま補正を始めます。';$('fileAuto').click();return}
+  runAuto();
+};
+$('fileAuto').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $('automsg').textContent='写真を読み込んでいます…';
+  const ok=await loadFile(f);
+  e.target.value='';
+  if(ok)await runAuto();
+  else $('automsg').textContent='写真を読み込めませんでした。別の写真で、もう一度試してください。';
+});
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})}
 function render(){
   if(!has)return;
